@@ -1,11 +1,12 @@
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI
 import uvicorn
 import asyncio
 from fastapi.responses import HTMLResponse
+from asyncio import Lock
 
 app = FastAPI()
-
 counter = 0
+counter_lock = Lock()
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
@@ -32,10 +33,11 @@ async def read_root():
 @app.get("/increment")
 async def increment():
     global counter
-    # Симуляция долгой операции
-    await asyncio.sleep(1)
-    counter += 1
-    return {"counter": counter}
+    async with counter_lock:
+        # Симуляция долгой операции
+        await asyncio.sleep(1)
+        counter += 1
+        return {"counter": counter}
 
 @app.get("/get_counter")
 async def get_counter():
