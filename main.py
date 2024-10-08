@@ -21,9 +21,17 @@ async def read_root():
             <h2>Counter: <span id="counter">0</span></h2>
             <script>
                 async function incrementCounter() {
-                    const response = await fetch('/increment');
-                    const data = await response.json();
-                    document.getElementById('counter').innerText = data.counter;
+                    const numRequests = 10; // Количество параллельных запросов
+                    const promises = [];
+                    for (let i = 0; i < numRequests; i++) {
+                        promises.push(fetch('/increment'));
+                    }
+                    const responses = await Promise.all(promises);
+                    for (const response of responses) {
+                        const data = await response.json();
+                        console.log(`Counter updated to: ${data.counter}`);
+                        document.getElementById('counter').innerText = data.counter;
+                    }
                 }
             </script>
         </body>
@@ -35,7 +43,7 @@ async def increment():
     global counter
     async with counter_lock:
         # Симуляция долгой операции
-        await asyncio.sleep(1)
+        await asyncio.sleep(1)  # Можно изменить на случайную задержку
         counter += 1
         return {"counter": counter}
 
